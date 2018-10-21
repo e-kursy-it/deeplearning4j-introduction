@@ -20,7 +20,7 @@ import java.nio.file.StandardCopyOption;
 
 import static spark.Spark.*;
 
-public class HelloWorld {
+public class LeNetMnistDemo {
     public static void main(String[] args) throws Exception {
         MultiLayerNetwork net = MultiLayerNetwork.load(new File("src/main/resources/models/lenet-mnist-model.zip"), false);
 
@@ -96,7 +96,7 @@ public class HelloWorld {
         for (int i = 0; i < 28; i++) {
             for (int j = 0; j < 28; j++) {
                 Color c = new Color(gray.getRGB(i, j));
-                digit.putScalar(new int[]{j, i}, (c.getGreen() & 0xFF));
+                digit.putScalar(j, i, (c.getGreen() & 0xFF));
             }
         }
 
