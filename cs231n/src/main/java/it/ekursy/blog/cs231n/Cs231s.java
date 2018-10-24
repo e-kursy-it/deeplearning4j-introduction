@@ -1,4 +1,4 @@
-package it.ekursy.blog.dl4jintro;
+package it.ekursy.blog.cs231n;
 
 import static org.nd4j.linalg.ops.transforms.Transforms.*;
 
@@ -9,6 +9,7 @@ import javax.swing.*;
 import org.math.plot.Plot2DPanel;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.ops.transforms.Transforms;
 
 public class Cs231s {
 
@@ -29,7 +30,7 @@ public class Cs231s {
             INDArray t = Nd4j
                     .linspace(j * 4, (j + 1) * 4, N)
                     .add(Nd4j.rand(new int[]{N})
-                    .mul(0.2));// # theta
+                            .mul(0.2));// # theta
 
             // X[ix] = np.c_[r*np.sin(t), r*np.cos(t)]
 
@@ -41,7 +42,7 @@ public class Cs231s {
         return X;
     }
 
-    public   void visualizeData(INDArray X) {
+    public void visualizeData(INDArray X) {
         // create your PlotPanel (you can use it as a JPanel)
         Plot2DPanel plot = new Plot2DPanel();
 
@@ -59,6 +60,21 @@ public class Cs231s {
         frame.setVisible(true);
         frame.setSize(400, 400);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    }
+
+    public void trainingSoftMaxClassifier() {
+        INDArray W = Nd4j.rand(D, K).muli(0.01);
+        INDArray b = Nd4j.create(1, K);
+
+        INDArray X = generateData().reshape(N * K, D);
+        INDArray scores = X.mmul(W).add(b);
+
+        long num_examples = X.shape()[0];
+        INDArray exp_scores = Transforms.exp(scores);
+        INDArray probs = exp_scores.divi(Nd4j.sum(exp_scores, 1));
+
+        // TODO [mb] - next step from here :)
+        //correct_logprobs = -Transforms.log(probs)
     }
 
     public static void main(String[] args) {
