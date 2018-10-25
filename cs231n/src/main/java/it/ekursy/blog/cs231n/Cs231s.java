@@ -6,12 +6,16 @@ import java.awt.*;
 import java.util.List;
 import javax.swing.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.math.plot.Plot2DPanel;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
 public class Cs231s {
+
+    private static final Logger LOG = LogManager.getLogger();
 
     private int N = 100; // number of points per class
     private int D = 2; // dimensionality
@@ -63,15 +67,23 @@ public class Cs231s {
     }
 
     public void trainingSoftMaxClassifier() {
-        INDArray W = Nd4j.rand(D, K).muli(0.01);
-        INDArray b = Nd4j.create(1, K);
+        INDArray W = Nd4j.randn(D, K).muli(0.01);
+        INDArray b = Nd4j.zeros(1, K);
 
         INDArray X = generateData().reshape(N * K, D);
-        INDArray scores = X.mmul(W).add(b);
+
+        // scores = np.dot(X, W) + b
+        // bo contains only zeros so I skipped it...
+        INDArray scores = X.mmul(W);//.add(b);
 
         long num_examples = X.shape()[0];
         INDArray exp_scores = Transforms.exp(scores);
-        INDArray probs = exp_scores.divi(Nd4j.sum(exp_scores, 1));
+
+        // removing second param to sum
+        // https://github.com/e-kursy-it/JavaRNN/blob/3863d13b1b06b63cc85bcd594622c350cd0e36f8/src/main/java/com/guilherme/charRNN/CharRNN.java#L275
+        INDArray probs = exp_scores.div(Nd4j.sum(exp_scores));
+
+        LOG.info("Probs shape: {}", probs.shape());
 
         // TODO [mb] - next step from here :)
         //correct_logprobs = -Transforms.log(probs)
@@ -79,7 +91,7 @@ public class Cs231s {
 
     public static void main(String[] args) {
         Cs231s cs231s = new Cs231s();
-        INDArray data = cs231s.generateData();
-        cs231s.visualizeData(data);
+        //INDArray data = cs231s.generateData();
+        cs231s.trainingSoftMaxClassifier();
     }
 }
