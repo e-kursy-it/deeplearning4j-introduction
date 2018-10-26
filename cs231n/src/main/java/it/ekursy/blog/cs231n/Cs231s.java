@@ -74,7 +74,7 @@ public class Cs231s {
 
         // scores = np.dot(X, W) + b
         // bo contains only zeros so I skipped it...
-        INDArray scores = X.mmul(W);//.add(b);
+        INDArray scores = X.mmul(W).addRowVector(b);
 
         long num_examples = X.shape()[0];
         INDArray exp_scores = Transforms.exp(scores);
