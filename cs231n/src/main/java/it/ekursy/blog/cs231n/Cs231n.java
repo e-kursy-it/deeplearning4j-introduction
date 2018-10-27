@@ -11,11 +11,9 @@ import org.apache.logging.log4j.Logger;
 import org.math.plot.Plot2DPanel;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.indexing.INDArrayIndex;
-import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
-public class Cs231s {
+public class Cs231n {
 
     private static final Logger LOG = LogManager.getLogger();
 
@@ -96,8 +94,8 @@ public class Cs231s {
     }
 
     public static void main(String[] args) {
-        Cs231s cs231s = new Cs231s();
-        //INDArray data = cs231s.generateData();
-        cs231s.trainingSoftMaxClassifier();
+        Cs231n cs231N = new Cs231n();
+        //INDArray data = cs231N.generateData();
+        cs231N.trainingSoftMaxClassifier();
     }
 }
