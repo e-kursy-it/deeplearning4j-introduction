@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 import org.math.plot.Plot2DPanel;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.indexing.INDArrayIndex;
+import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
 public class Cs231s {
@@ -25,6 +27,7 @@ public class Cs231s {
 
     public INDArray generateData() {
         INDArray X = Nd4j.zeros(K, D, N);// # data matrix (each row = single example)
+        INDArray y = Nd4j.zeros(K, N);
 
         for (int j = 0; j < K; j++) {
             // r = np.linspace(0.0,1,N) # radius
@@ -33,7 +36,7 @@ public class Cs231s {
             // t = np.linspace(j*4,(j+1)*4,N) + np.random.randn(N)*0.2 # theta
             INDArray t = Nd4j
                     .linspace(j * 4, (j + 1) * 4, N)
-                    .add(Nd4j.rand(new int[]{N})
+                    .add(Nd4j.randn(new int[]{N})
                             .mul(0.2));// # theta
 
             // X[ix] = np.c_[r*np.sin(t), r*np.cos(t)]
@@ -41,7 +44,10 @@ public class Cs231s {
             X.getRow(j).putRow(0, r.mul(sin(t)));
             X.getRow(j).putRow(1, r.mul(cos(t)));
 
+            y.putRow(j, Nd4j.zeros(N).addi(j));
         }
+
+        y = y.reshape(N * K);
 
         return X;
     }
@@ -85,8 +91,8 @@ public class Cs231s {
 
         LOG.info("Probs shape: {}", probs.shape());
 
-        // TODO [mb] - next step from here :)
-        //correct_logprobs = -Transforms.log(probs)
+        // correct_logprobs = -np.log(probs[range(num_examples),y])
+//        correct_logprobs = -Transforms.log(probs.)
     }
 
     public static void main(String[] args) {
