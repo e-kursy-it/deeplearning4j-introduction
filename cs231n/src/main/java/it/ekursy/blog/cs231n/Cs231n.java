@@ -11,7 +11,11 @@ import org.apache.logging.log4j.Logger;
 import org.math.plot.Plot2DPanel;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.indexing.INDArrayIndex;
+import org.nd4j.linalg.indexing.NDArrayIndex;
+import org.nd4j.linalg.indexing.NDArrayIndexAll;
 import org.nd4j.linalg.ops.transforms.Transforms;
+import org.nd4j.linalg.util.ArrayUtil;
 
 public class Cs231n {
 
@@ -20,10 +24,11 @@ public class Cs231n {
     private int N = 100; // number of points per class
     private int D = 2; // dimensionality
     private int K = 3; // number of classes
+    double reg = 1e-3; // regularization strength
 
     private final List<Color> colors = List.of(Color.RED, Color.GREEN, Color.BLUE);
 
-    public INDArray generateData() {
+    public INDArray[] generateData() {
         INDArray X = Nd4j.zeros(K, D, N);// # data matrix (each row = single example)
         INDArray y = Nd4j.zeros(K, N);
 
@@ -47,7 +52,7 @@ public class Cs231n {
 
         y = y.reshape(N * K);
 
-        return X;
+        return new INDArray[]{X, y};
     }
 
     public void visualizeData(INDArray X) {
@@ -74,23 +79,48 @@ public class Cs231n {
         INDArray W = Nd4j.randn(D, K).muli(0.01);
         INDArray b = Nd4j.zeros(1, K);
 
-        INDArray X = generateData().reshape(N * K, D);
+        INDArray[] data = generateData();
+        INDArray X = data[0].reshape(N * K, D);
+        INDArray y = data[1];
 
         // scores = np.dot(X, W) + b
-        // bo contains only zeros so I skipped it...
         INDArray scores = X.mmul(W).addRowVector(b);
 
-        long num_examples = X.shape()[0];
         INDArray exp_scores = Transforms.exp(scores);
 
-        // removing second param to sum
-        // https://github.com/e-kursy-it/JavaRNN/blob/3863d13b1b06b63cc85bcd594622c350cd0e36f8/src/main/java/com/guilherme/charRNN/CharRNN.java#L275
-        INDArray probs = exp_scores.div(Nd4j.sum(exp_scores));
+        INDArray probs = Nd4j.create(scores.shape());
 
-        LOG.info("Probs shape: {}", probs.shape());
+        long num_examples = X.shape()[0];
 
-        // correct_logprobs = -np.log(probs[range(num_examples),y])
-//        correct_logprobs = -Transforms.log(probs.)
+        // data normalizaiton
+        for (int i = 0; i < K; i++) {
+            // https://github.com/e-kursy-it/JavaRNN/blob/3863d13b1b06b63cc85bcd594622c350cd0e36f8/src/main/java/com/guilherme/charRNN/CharRNN.java#L275
+            INDArray probsAxis = exp_scores.getColumn(i).div(Nd4j.sum(exp_scores.getColumn(i)));
+
+            probs.putColumn(i, probsAxis);
+
+            // In particular, since we’ve normalized them every row now sums to one
+            LOG.info("Sum of column should be 1, after normalization: {}", Nd4j.sum(probsAxis.getColumn(0)));
+        }
+
+        double loss = 0.0d;
+        for (int i = 0; i < K; i++) {
+            INDArrayIndex[] indices = {NDArrayIndex.interval(i * N, (i + 1) * N), NDArrayIndex.point(i)};
+            INDArray pprobs = probs.get(indices);
+
+            LOG.info("Probs: {}", pprobs.shape());
+            INDArray correct_logprobs = Transforms.log(probs.get(indices)).muli(-1);
+
+            // data_loss = np.sum(correct_logprobs)/num_examples
+            double data_loss = correct_logprobs.sumNumber().doubleValue() / num_examples;
+
+            // reg_loss = 0.5*reg*np.sum(W*W)
+            double reg_loss = 0.5 * reg * W.mul(W).sumNumber().doubleValue();
+
+            loss += data_loss + reg_loss;
+        }
+
+        LOG.info("probs shape: {}", probs.shape());
     }
 
     public static void main(String[] args) {
